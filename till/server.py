@@ -312,6 +312,10 @@ def _month_name(ym: str) -> str:
 
 # ----------------------------------------------------------------------------- server + demo routes
 
+from . import paypal_tools  # noqa: E402  (PayPal tools join the same MCP Apps extension)
+paypal_tools.register(apps, CARD_URI, _result, _money, _speak_money, _spoken_date)
+
+
 mcp = MCPServer("till", title="Till", version="0.1.0",
                 description="A voice CFO for small businesses: cash, forecast, unusual charges, affordability.",
                 instructions="Till answers money questions for a small business owner by voice. Read the first "

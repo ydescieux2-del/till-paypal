@@ -1,0 +1,21 @@
+{
+ "balances": [
+  {
+   "currency": "USD",
+   "primary": true,
+   "total_balance": {
+    "currency_code": "USD",
+    "value": "3184.52"
+   },
+   "available_balance": {
+    "currency_code": "USD",
+    "value": "2911.07"
+   },
+   "withheld_balance": {
+    "currency_code": "USD",
+    "value": "273.45"
+   }
+  }
+ ],
+ "as_of_time": "2026-10-13T23:59:59Z"
+}

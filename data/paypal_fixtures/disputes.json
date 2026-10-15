@@ -1,0 +1,26 @@
+{
+ "items": [
+  {
+   "dispute_id": "PP-D-27801",
+   "create_time": "2026-10-09T17:20:00Z",
+   "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+   "status": "WAITING_FOR_SELLER_RESPONSE",
+   "dispute_amount": {
+    "currency_code": "USD",
+    "value": "42.50"
+   },
+   "seller_response_due_date": "2026-10-19T17:20:00Z"
+  },
+  {
+   "dispute_id": "PP-D-27844",
+   "create_time": "2026-10-11T15:05:00Z",
+   "reason": "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED",
+   "status": "WAITING_FOR_SELLER_RESPONSE",
+   "dispute_amount": {
+    "currency_code": "USD",
+    "value": "186.00"
+   },
+   "seller_response_due_date": "2026-10-21T15:05:00Z"
+  }
+ ]
+}

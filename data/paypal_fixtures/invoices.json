@@ -1,0 +1,113 @@
+{
+ "items": [
+  {
+   "id": "INV2-TILL-0001",
+   "status": "SENT",
+   "detail": {
+    "invoice_number": "SB-1001",
+    "invoice_date": "2026-08-29",
+    "payment_term": {
+     "due_date": "2026-09-28"
+    },
+    "currency_code": "USD"
+   },
+   "primary_recipients": [
+    {
+     "billing_info": {
+      "email_address": "events@example.org"
+     }
+    }
+   ],
+   "amount": {
+    "currency_code": "USD",
+    "value": "640.00"
+   },
+   "due_amount": {
+    "currency_code": "USD",
+    "value": "640.00"
+   }
+  },
+  {
+   "id": "INV2-TILL-0002",
+   "status": "SENT",
+   "detail": {
+    "invoice_number": "SB-1002",
+    "invoice_date": "2026-09-20",
+    "payment_term": {
+     "due_date": "2026-10-20"
+    },
+    "currency_code": "USD"
+   },
+   "primary_recipients": [
+    {
+     "billing_info": {
+      "email_address": "office@example.net"
+     }
+    }
+   ],
+   "amount": {
+    "currency_code": "USD",
+    "value": "485.00"
+   },
+   "due_amount": {
+    "currency_code": "USD",
+    "value": "485.00"
+   }
+  },
+  {
+   "id": "INV2-TILL-0003",
+   "status": "UNPAID",
+   "detail": {
+    "invoice_number": "SB-1003",
+    "invoice_date": "2026-09-27",
+    "payment_term": {
+     "due_date": "2026-10-27"
+    },
+    "currency_code": "USD"
+   },
+   "primary_recipients": [
+    {
+     "billing_info": {
+      "email_address": "orders@example.com"
+     }
+    }
+   ],
+   "amount": {
+    "currency_code": "USD",
+    "value": "310.00"
+   },
+   "due_amount": {
+    "currency_code": "USD",
+    "value": "310.00"
+   }
+  },
+  {
+   "id": "INV2-TILL-0004",
+   "status": "PAID",
+   "detail": {
+    "invoice_number": "SB-1004",
+    "invoice_date": "2026-09-01",
+    "payment_term": {
+     "due_date": "2026-10-01"
+    },
+    "currency_code": "USD"
+   },
+   "primary_recipients": [
+    {
+     "billing_info": {
+      "email_address": "events@example.org"
+     }
+    }
+   ],
+   "amount": {
+    "currency_code": "USD",
+    "value": "520.00"
+   },
+   "due_amount": {
+    "currency_code": "USD",
+    "value": "520.00"
+   }
+  }
+ ],
+ "total_items": 4
+}
