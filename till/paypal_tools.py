@@ -79,8 +79,8 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
         refunds = -sum(r["amount"] for r in recent if r["category"] == "Refunds")
         rr = refund_radar(rows, d["disputes"], today)
         inv = [i for i in unpaid_invoices(d["invoices"], today) if i["days_overdue"] > 0]
-        parts = [f"PayPal balance is {speak_money(d['balance'])}. This week you sold {speak_money(sales)}, "
-                 f"paid {speak_money(fees)} in fees, and refunded {speak_money(refunds)}."]
+        parts = [f"PayPal balance is {speak_money(d['balance'])}. This week you sold {speak_money(sales)} and paid "
+                 f"{speak_money(fees)} in fees" + (f", and refunded {speak_money(refunds)}." if refunds >= 1 else ".")]
         if rr["disputes"]:
             first = rr["disputes"][0]
             parts.append(f"{len(rr['disputes'])} open dispute{'s' if len(rr['disputes']) != 1 else ''}, "
@@ -110,6 +110,13 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
         if not fw["latest"]:
             return result("Not enough PayPal sales yet to measure fees.", "no data", {"kind": "fees", "title": "Fee watch"})
         lt = fw["latest"]
+        if fw["baseline"] is None:
+            speech = (f"This week PayPal kept {lt['rate']:.1f} percent of your sales. I need about three weeks of sales "
+                      "to know your normal rate, so I'll flag drift after that.")
+            card = {"kind": "fees", "title": "PayPal fee rate", "big": f"{lt['rate']:.2f}%", "big_label": "this week (baseline building)",
+                    "rows": [{"label": f"Week of {w['week']}", "value": f"{w['rate']:.2f}%  ({money(w['fees'])} on {money(w['sales'])})"}
+                             for w in fw["weeks"]]}
+            return result(speech, str(fw), card, {"fee_watch": fw})
         speech = (f"This week PayPal kept {lt['rate']:.1f} percent of your sales, against your usual {fw['baseline']:.1f}. "
                   + (f"That's about {speak_money(fw['extra_this_week'])} more than normal; check for more card or "
                      "international payments, or a pricing change." if fw["drift"] else "That's in line with normal."))

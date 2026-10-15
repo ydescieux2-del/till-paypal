@@ -90,7 +90,7 @@ class PayPal:
                 body = self.get("/v1/reporting/transactions", {
                     "start_date": start.isoformat().replace("+00:00", "Z"),
                     "end_date": stop.isoformat().replace("+00:00", "Z"),
-                    "fields": "transaction_info,payer_info,balance_info", "page_size": 500, "page": page})
+                    "fields": "all", "page_size": 500, "page": page})
                 out += body.get("transaction_details", [])
                 if page >= int(body.get("total_pages", 1) or 1):
                     break
