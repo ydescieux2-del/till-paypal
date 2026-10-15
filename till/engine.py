@@ -109,7 +109,8 @@ def _step(d: date, every_days: int) -> date:
 
 
 def forecast(txns, opening: float, weeks: int = 13, extra_weekly: float = 0.0,
-             extra_once: float = 0.0, once_week: int = 1, floor: float = 5_000.0) -> dict:
+             extra_once: float = 0.0, once_week: int = 1, floor: float = 5_000.0,
+             expected_inflows: list[tuple[str, float]] | None = None) -> dict:
     """13-week cash forecast: average weekly sales of the last 8 weeks, recurring bills on their
     cadence, and other spending at its recent weekly average."""
     end = as_of(txns)
@@ -131,8 +132,12 @@ def forecast(txns, opening: float, weeks: int = 13, extra_weekly: float = 0.0,
                     bills += r["typical"]
                 nxt = _step(nxt, r["every_days"])
         out = bills + other_out + extra_weekly + (extra_once if w == once_week else 0.0)
-        bal = bal + weekly_in - out
-        row = {"week": w, "week_ending": w_end.isoformat(), "cash_in": round(weekly_in, 2),
+        # money already owed to the business (e.g. unpaid invoices), counted in the week it's due;
+        # anything already past due is counted in week 2, not week 1, since it's late for a reason
+        owed = sum(amt for due, amt in (expected_inflows or [])
+                   if (w_start <= max(_d(due), end + timedelta(days=8)) <= w_end))
+        bal = bal + weekly_in + owed - out
+        row = {"week": w, "week_ending": w_end.isoformat(), "cash_in": round(weekly_in + owed, 2), "owed_in": round(owed, 2),
                "cash_out": round(out, 2), "balance": round(bal, 2)}
         rows.append(row)
         if low is None or bal < low["balance"]:

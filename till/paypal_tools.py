@@ -79,8 +79,9 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
         refunds = -sum(r["amount"] for r in recent if r["category"] == "Refunds")
         rr = refund_radar(rows, d["disputes"], today)
         inv = [i for i in unpaid_invoices(d["invoices"], today) if i["days_overdue"] > 0]
-        parts = [f"PayPal balance is {speak_money(d['balance'])}. This week you sold {speak_money(sales)} and paid "
-                 f"{speak_money(fees)} in fees" + (f", and refunded {speak_money(refunds)}." if refunds >= 1 else ".")]
+        parts = [f"PayPal balance is {speak_money(d['balance'])}. This week you sold {speak_money(sales)}"
+                 + (f", paid {speak_money(fees)} in fees, and refunded {speak_money(refunds)}." if refunds >= 1
+                    else f" and paid {speak_money(fees)} in fees.")]
         if rr["disputes"]:
             first = rr["disputes"][0]
             parts.append(f"{len(rr['disputes'])} open dispute{'s' if len(rr['disputes']) != 1 else ''}, "
@@ -164,6 +165,30 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
                            "detail": (f"{i['days_overdue']} days overdue" if i["days_overdue"] > 0 else f"due {i['due']}"),
                            "tone": "bad" if i["days_overdue"] > 0 else None} for i in inv]}
         return result(speech, str(inv), card, {"invoices": inv})
+
+    @apps.tool(resource_uri=card_uri, title="PayPal cash forecast",
+               description="Week-by-week forecast of the PayPal balance from recent PayPal sales, fees, refunds and "
+                           "transfers, plus unpaid invoices counted as cash coming in on their due dates.")
+    @guard
+    def paypal_forecast(weeks: int = 13) -> CallToolResult:
+        d = _data()
+        weeks = max(1, min(int(weeks), 26))
+        inv = unpaid_invoices(d["invoices"], _today(d))
+        owed = [(i["due"], i["amount"]) for i in inv if i["due"]]
+        fc = engine.forecast(d["rows"], d["opening"], weeks=weeks, expected_inflows=owed, floor=1000.0)
+        low = fc["low_point"]
+        total_owed = sum(a for _, a in owed)
+        speech = (f"Over the next {weeks} weeks your PayPal balance bottoms out at {speak_money(low['balance'])} "
+                  f"the week ending {spoken_date(low['week_ending'])}, and ends near {speak_money(fc['ending_balance'])}.")
+        if total_owed:
+            speech += f" That counts {speak_money(total_owed)} in unpaid invoices arriving when they're due."
+        card = {"kind": "forecast", "title": f"PayPal balance, next {weeks} weeks", "as_of": fc["as_of"],
+                "big": money(low["balance"]), "big_label": f"lowest point, week ending {low['week_ending']}",
+                "chart": [w["balance"] for w in fc["weeks"]],
+                "rows": [{"label": f"Wk {w['week']} ({w['week_ending'][5:]})",
+                          "value": money(w["balance"]) + (f"  (+{money(w['owed_in'])} invoices)" if w["owed_in"] else "")}
+                         for w in fc["weeks"]]}
+        return result(speech, str(fc), card, {"forecast": fc})
 
     # ---------------------------------------------------------------- previews (no money moves)
 
@@ -258,5 +283,5 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
         card = {"kind": "done", "title": "Done", "big": "Confirmed", "big_tone": "ok", "big_label": p["summary"]}
         return result(speech, f"executed {p['kind']}: {out}", card, {"executed": p["kind"], "paypal": out})
 
-    return [paypal_cash_brief, paypal_fee_watch, paypal_refund_radar, paypal_unpaid_invoices,
+    return [paypal_cash_brief, paypal_forecast, paypal_fee_watch, paypal_refund_radar, paypal_unpaid_invoices,
             preview_invoice, preview_refund, preview_accept_dispute, confirm_action]

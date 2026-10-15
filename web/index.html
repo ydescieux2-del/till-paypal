@@ -178,9 +178,18 @@ document.getElementById("ask").onsubmit = e => {
   const q = document.getElementById("q"); if (q.value.trim()) ask(q.value.trim()); q.value = "";
 };
 
-const CHIPS = ["Give me my morning brief", "Any weird charges?", "Mark the flour charge as a dispute",
-               "Can I afford a part-time baker at $1,800 a month?", "What changed in spending last month?",
-               "Warn me if cash drops under 12 thousand"];
+const PAYPAL = new URLSearchParams(location.search).has("paypal");
+const CHIPS = PAYPAL
+  ? ["How's PayPal looking?", "Any refund or dispute problems?", "Who owes me money?",
+     "What will my PayPal balance look like this quarter?", "Are PayPal fees creeping up?",
+     "Invoice orders@example.com 200 dollars for a birthday cake"]
+  : ["Give me my morning brief", "Any weird charges?", "Mark the flour charge as a dispute",
+     "Can I afford a part-time baker at $1,800 a month?", "What changed in spending last month?",
+     "Warn me if cash drops under 12 thousand"];
+if (PAYPAL) document.addEventListener("DOMContentLoaded", () => {
+  const b = [...document.querySelectorAll(".status b")].pop();
+  if (b) b.textContent = "Sunrise Bakery on PayPal (sandbox)";
+});
 for (const c of CHIPS) {
   const b = document.createElement("button"); b.className = "chip"; b.textContent = c; b.onclick = () => ask(c);
   document.getElementById("chips").appendChild(b);
@@ -205,7 +214,10 @@ Use the tools for every number; never estimate. You may call several tools in a 
 (for example check unusual_charges to get an id before review_charge, or a forecast before advising).
 Reply in at most two short spoken sentences, 45 words total, no lists, no markdown. Lead with the one thing that matters most, then offer one follow-up (for example: want me to go through the charges?).
 The first text block of each tool result is already written for the ear; reuse it when it answers the question.
-You are not a licensed advisor; do not give tax or investment advice.`;
+You are not a licensed advisor; do not give tax or investment advice.
+For PayPal questions use the paypal_* tools. Money-moving actions (invoices, refunds, settling disputes) always go
+through a preview_* tool first; read the preview back and ask the owner to say "confirm". Only call confirm_action
+after the owner's latest message says confirm, and pass the exact confirm_token from the preview.`;
 
 async function agentTurn(text) {
   const llmTools = tools.map(t => ({ name: t.name, description: t.description,
@@ -246,9 +258,27 @@ function dollars(text) {
 }
 
 let lastCharges = [];
+let pendingToken = null;
 async function offlineTurn(text) {
   const t = text.toLowerCase();
   const first = r => r.content[0].text;
+  if (PAYPAL) {
+    if (/^\s*(yes,?\s*)?confirm/.test(t)) {
+      if (!pendingToken) return "There's nothing waiting for confirmation.";
+      const r = await callTool("confirm_action", { confirm_token: pendingToken }); pendingToken = null; return first(r);
+    }
+    const inv = t.match(/invoice\s+(\S+@\S+)\s+\$?([\d,.]+)\s*(?:dollars)?\s*(?:for\s+(.+))?/);
+    if (inv) {
+      const r = await callTool("preview_invoice", { recipient_email: inv[1], amount: parseFloat(inv[2].replace(/,/g, "")),
+                                                    item: (inv[3] || "your order").replace(/[.?!]$/, "") });
+      pendingToken = r.structuredContent?.confirm_token || null; return first(r);
+    }
+    if (/(refund|dispute|chargeback)/.test(t)) return first(await callTool("paypal_refund_radar", {}));
+    if (/(owe|invoice|unpaid|overdue)/.test(t)) return first(await callTool("paypal_unpaid_invoices", {}));
+    if (/(fee)/.test(t)) return first(await callTool("paypal_fee_watch", {}));
+    if (/(forecast|quarter|next|weeks|look like)/.test(t)) return first(await callTool("paypal_forecast", {}));
+    return first(await callTool("paypal_cash_brief", {}));
+  }
   if (/(dispute|cancel|expected|that's fine|was fine|mark)/.test(t)) {
     if (!lastCharges.length) lastCharges = (await callTool("unusual_charges", {})).structuredContent.charges;
     const hit = lastCharges.find(c => c.vendor.toLowerCase().split(/\s+/).some(w => w.length > 3 && t.includes(w)))
