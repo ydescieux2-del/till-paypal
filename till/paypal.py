@@ -59,7 +59,7 @@ class PayPal:
         if self.fixtures:
             return self._fixture(fixture or path.strip("/").replace("/", "_"))
         r = httpx.get(self.base + path, params=params, headers=self._auth(), timeout=30)
-        if r.status_code == 403 and "reporting" in path:
+        if r.status_code == 403 and "reporting/transactions" in path:
             raise PayPalError("Transaction Search is not enabled on this PayPal app. Turn on 'Transaction search' "
                               "under the app's Features in developer.paypal.com, then try again.")
         if r.status_code >= 400:
@@ -90,7 +90,7 @@ class PayPal:
                 body = self.get("/v1/reporting/transactions", {
                     "start_date": start.isoformat().replace("+00:00", "Z"),
                     "end_date": stop.isoformat().replace("+00:00", "Z"),
-                    "fields": "transaction_info,payer_info", "page_size": 500, "page": page})
+                    "fields": "transaction_info,payer_info,balance_info", "page_size": 500, "page": page})
                 out += body.get("transaction_details", [])
                 if page >= int(body.get("total_pages", 1) or 1):
                     break
@@ -99,7 +99,15 @@ class PayPal:
         return out
 
     def balance(self) -> float:
-        body = self.get("/v1/reporting/balances", {"currency_code": "USD"}, fixture="balances")
+        try:
+            body = self.get("/v1/reporting/balances", {"currency_code": "USD"}, fixture="balances")
+        except PayPalError:
+            # balances scope not granted yet: use the running balance PayPal stamps on the latest transaction
+            for d in sorted(self.transactions(days=31), key=lambda d: d.get("transaction_info", {}).get("transaction_initiation_date", ""), reverse=True):
+                end = d.get("transaction_info", {}).get("ending_balance") or d.get("transaction_info", {}).get("available_balance")
+                if end:
+                    return float(end.get("value", 0))
+            return 0.0
         for b in body.get("balances", []):
             if b.get("currency") == "USD" or b.get("primary"):
                 return float(b.get("total_balance", {}).get("value", 0))
