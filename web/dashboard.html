@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Till for PayPal: cash desk</title>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@36.2.0/dist/ag-grid-community.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-charts-community@14.2.0/dist/umd/ag-charts-community.min.js"></script>
+<style>
+  :root { --bg:#0b1220; --surface:#121c2f; --border:#1f2a40; --text:#e2e8f0; --text-2:#94a3b8;
+          --accent:#60a5fa; --good:#4ade80; --warn:#fbbf24; --bad:#f87171; --navy:#0f2240; }
+  [data-theme="light"] { --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0; --text:#0f172a; --text-2:#475569;
+          --accent:#2563eb; --good:#15803d; --warn:#b45309; --bad:#b91c1c; --navy:#0f2240; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--text);
+               font:15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  header { display:flex; justify-content:space-between; align-items:center; padding:16px 28px;
+           border-bottom:1px solid var(--border); }
+  header h1 { margin:0; font-size:20px; } header h1 small { color:var(--text-2); font-weight:400; font-size:15px; margin-left:8px; }
+  .asof { color:var(--text-2); font-size:13px; }
+  main { padding:20px 28px; display:grid; gap:18px; }
+  .kpis { display:grid; grid-template-columns:repeat(6, 1fr); gap:14px; }
+  .kpi { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .kpi .label { font-size:13px; color:var(--text-2); text-transform:uppercase; letter-spacing:.05em; }
+  .kpi .value { font-size:28px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .kpi .sub { font-size:13px; color:var(--text-2); }
+  .good { color:var(--good); } .warn { color:var(--warn); } .bad { color:var(--bad); }
+  .row2 { display:grid; grid-template-columns:1.2fr 1fr; gap:18px; }
+  .panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; min-height:0; }
+  .panel h2 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-2); }
+  .chart { height:300px; }
+  .grid { height:330px; }
+  .row3 { display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:18px; }
+  .err { color:var(--bad); padding:28px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Till for PayPal <small>cash desk · Sunrise Bakery (sandbox)</small></h1>
+  <div class="asof" id="asof">loading…</div>
+</header>
+<main id="main">
+  <section class="kpis" id="kpis"></section>
+  <section class="row2">
+    <div class="panel"><h2>Weekly PayPal sales and refunds</h2><div class="chart" id="weekly"></div></div>
+    <div class="panel"><h2>PayPal balance forecast (unpaid invoices included)</h2><div class="chart" id="forecast"></div></div>
+  </section>
+  <section class="row3">
+    <div class="panel"><h2>Disputes by deadline</h2><div class="grid" id="disputes"></div></div>
+    <div class="panel"><h2>Unpaid invoices</h2><div class="grid" id="invoices"></div></div>
+    <div class="panel"><h2>Recent PayPal activity (customers anonymized)</h2><div class="grid" id="txns"></div></div>
+  </section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const money = v => v == null ? "–" : (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString("en-US", {maximumFractionDigits: 0});
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const dark = document.documentElement.dataset.theme !== "light";
+const gridTheme = agGrid.themeQuartz.withPart(dark ? agGrid.colorSchemeDarkBlue : agGrid.colorSchemeLight)
+  .withParams({ fontSize: 14, headerFontSize: 13, backgroundColor: css("--surface"), rowHeight: 34 });
+
+function kpi(label, value, sub, tone) {
+  return `<div class="kpi"><div class="label">${label}</div><div class="value ${tone || ""}">${value}</div><div class="sub">${sub || ""}</div></div>`;
+}
+
+function grid(el, columnDefs, rowData) {
+  agGrid.createGrid(el, { theme: gridTheme, columnDefs, rowData, defaultColDef: { flex: 1, sortable: true, resizable: true },
+                          suppressCellFocus: true });
+}
+
+async function load() {
+  const r = await fetch("/api/paypal/dashboard");
+  const d = await r.json();
+  if (!r.ok || d.error) { $("#main").innerHTML = `<div class="err">PayPal data unavailable: ${d.error || r.status}</div>`; return; }
+  const k = d.kpis;
+  $("#asof").textContent = "as of " + d.as_of;
+  $("#kpis").innerHTML =
+    kpi("PayPal balance", money(k.balance), `13-week low ${money(k.low_point)} (wk of ${k.low_week.slice(5)})`) +
+    kpi("Sales, 7 days", money(k.sales_7d), `fees ${money(k.fees_7d)}`) +
+    kpi("Fee rate", k.fee_rate == null ? "–" : k.fee_rate.toFixed(2) + "%",
+        k.fee_baseline == null ? "baseline building" : `usual ${k.fee_baseline.toFixed(2)}%`,
+        k.fee_baseline != null && k.fee_rate - k.fee_baseline >= 0.4 ? "bad" : "good") +
+    kpi("Refund rate", k.refund_rate.toFixed(1) + "%", `usual ${k.refund_baseline.toFixed(1)}%`, k.refund_spike ? "bad" : "good") +
+    kpi("Disputes at risk", money(k.at_risk), `${d.disputes.length} open`, k.at_risk ? "warn" : "good") +
+    kpi("Owed to you", money(k.owed), `${money(k.overdue)} overdue`, k.overdue ? "warn" : "good");
+
+  const base = { theme: dark ? "ag-default-dark" : "ag-default", background: { fill: css("--surface") } };
+  agCharts.AgCharts.create({ ...base, container: $("#weekly"), data: d.weekly,
+    series: [
+      { type: "bar", xKey: "week", yKey: "sales", yName: "Sales", fill: css("--accent") },
+      { type: "bar", xKey: "week", yKey: "refunds", yName: "Refunds", fill: css("--bad") }],
+    axes: [{ type: "category", position: "bottom", label: { formatter: p => String(p.value).slice(5) } },
+           { type: "number", position: "left", label: { formatter: p => money(p.value) } }] });
+  agCharts.AgCharts.create({ ...base, container: $("#forecast"), data: d.forecast,
+    series: [{ type: "area", xKey: "week", yKey: "balance", yName: "Balance", fill: css("--accent"), fillOpacity: 0.25, stroke: css("--accent") },
+             { type: "bar", xKey: "week", yKey: "owed_in", yName: "Invoices due", fill: css("--good") }],
+    axes: [{ type: "category", position: "bottom", label: { formatter: p => String(p.value).slice(5) } },
+           { type: "number", position: "left", label: { formatter: p => money(p.value) } }] });
+
+  grid($("#disputes"), [
+    { field: "amount", valueFormatter: p => money(p.value), maxWidth: 110 },
+    { field: "reason", flex: 2 },
+    { field: "days_left", headerName: "Days left", sort: "asc", minWidth: 120, maxWidth: 130,
+      cellStyle: p => ({ color: p.value <= 7 ? css("--bad") : css("--text") }) }], d.disputes);
+  grid($("#invoices"), [
+    { field: "number", headerName: "Invoice", maxWidth: 140 },
+    { field: "amount", valueFormatter: p => money(p.value), maxWidth: 110 },
+    { field: "due" },
+    { field: "days_overdue", headerName: "Days late", sort: "desc", minWidth: 120, maxWidth: 130,
+      valueFormatter: p => p.value > 0 ? p.value : "–", cellStyle: p => ({ color: p.value > 0 ? css("--bad") : css("--text-2") }) }], d.invoices);
+  grid($("#txns"), [
+    { field: "date", maxWidth: 120 }, { field: "category" }, { field: "customer", maxWidth: 140 },
+    { field: "amount", valueFormatter: p => money(p.value), maxWidth: 110,
+      cellStyle: p => ({ color: p.value < 0 ? css("--bad") : css("--good") }) }], d.transactions);
+}
+load();
+</script>
+</body>
+</html>

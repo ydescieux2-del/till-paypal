@@ -331,6 +331,20 @@ async def demo_page(request: Request) -> Response:
     return FileResponse(WEB / "index.html")
 
 
+@mcp.custom_route("/dashboard", methods=["GET"])
+async def dashboard_page(request: Request) -> Response:
+    return FileResponse(WEB / "dashboard.html")
+
+
+@mcp.custom_route("/api/paypal/dashboard", methods=["GET"])
+async def dashboard_api(request: Request) -> Response:
+    import anyio
+    try:
+        return JSONResponse(await anyio.to_thread.run_sync(paypal_tools.dashboard_data))
+    except Exception as exc:   # surface PayPal errors to the page instead of a blank screen
+        return JSONResponse({"error": str(exc)}, 502)
+
+
 @mcp.custom_route("/agent/status", methods=["GET"])
 async def agent_status(request: Request) -> Response:
     return JSONResponse({"llm": bool(os.environ.get("ANTHROPIC_API_KEY")), "model": _agent_model(),

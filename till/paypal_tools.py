@@ -49,6 +49,44 @@ def _token(kind: str, args: dict, summary: str) -> str:
     return tok
 
 
+def dashboard_data() -> dict:
+    """Everything the PayPal dashboard shows, from the same deterministic functions the voice tools use."""
+    if not _pp.configured():
+        return {"error": "PayPal isn't connected."}
+    d = _data()
+    today = _today(d)
+    rows = d["rows"]
+    fw = fee_watch(rows)
+    rr = refund_radar(rows, d["disputes"], today)
+    inv = unpaid_invoices(d["invoices"], today)
+    fc = engine.forecast(rows, d["opening"], expected_inflows=[(i["due"], i["amount"]) for i in inv if i["due"]],
+                         floor=1000.0)
+    recent = [r for r in rows if (today - date.fromisoformat(r["date"])).days < 7]
+    weekly = {}
+    for w in fw["weeks"]:
+        weekly.setdefault(w["week"], {})["sales"] = w["sales"]
+        weekly[w["week"]]["fee_rate"] = w["rate"]
+    for w in rr["weekly"]:
+        weekly.setdefault(w["week"], {})["refunds"] = w["refunds"]
+        weekly[w["week"]]["refund_rate"] = w["refund_rate"]
+    return {
+        "as_of": today.isoformat(),
+        "kpis": {"balance": d["balance"],
+                 "sales_7d": round(sum(r["amount"] for r in recent if r["category"] == "Sales"), 2),
+                 "fees_7d": round(-sum(r["amount"] for r in recent if r["category"] == "Fees"), 2),
+                 "fee_rate": fw["latest"]["rate"] if fw["latest"] else None, "fee_baseline": fw["baseline"],
+                 "refund_rate": rr["latest_rate"], "refund_baseline": rr["baseline_rate"], "refund_spike": rr["spike"],
+                 "at_risk": rr["at_risk"], "owed": round(sum(i["amount"] for i in inv), 2),
+                 "overdue": round(sum(i["amount"] for i in inv if i["days_overdue"] > 0), 2),
+                 "low_point": fc["low_point"]["balance"], "low_week": fc["low_point"]["week_ending"]},
+        "weekly": [{"week": k, **v} for k, v in sorted(weekly.items())][-12:],
+        "forecast": [{"week": w["week_ending"], "balance": w["balance"], "owed_in": w["owed_in"]} for w in fc["weeks"]],
+        "disputes": rr["disputes"], "invoices": inv,
+        "transactions": [{k: r.get(k) for k in ("date", "category", "vendor", "amount", "customer")}
+                         for r in sorted(rows, key=lambda r: r["date"], reverse=True)[:60]],
+    }
+
+
 def register(apps, card_uri: str, result, money, speak_money, spoken_date):
     """Attach the PayPal tools to Till's MCP Apps extension (called before the server is built)."""
 
