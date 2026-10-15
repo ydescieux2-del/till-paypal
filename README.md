@@ -14,6 +14,27 @@ questions are simple: how much do I have, will I be short, did I get charged twi
 answers take an hour of reconciling. Till answers them in seconds, by voice. It remembers what you already
 decided, so the next morning's brief only tells you what's new.
 
+## New: Till for PayPal merchants (PayPal AI Hackathon, built Oct 15 to Nov 2026)
+
+Everything below was added during the hackathon window on top of the open-source Till core (first commit 2026-10-14).
+
+- **Reads a merchant's PayPal account** (sandbox): Transaction Search, balances, invoices, and disputes, mapped into
+  Till's deterministic cash engine. Customer emails never reach the model or the screen; they become short hashes.
+- **Voice questions for sellers:** "How's PayPal looking?", "Any refund or dispute problems?", "Who owes me money?",
+  "What will my PayPal balance look like this quarter?", "Are PayPal fees creeping up?"
+- **Checks that matter to a small seller:** effective fee rate against the seller's own baseline, refund-rate spikes and
+  repeat refunders, dispute money at risk sorted by response deadline, overdue invoices, and a 13-week balance
+  forecast that counts unpaid invoices as cash arriving on their due dates.
+- **Agentic actions with a human in the loop:** send an invoice, refund a payment, or settle a small dispute. Every
+  action is a two-step: a `preview_*` tool explains exactly what will happen and its effect on the cash forecast and
+  returns a one-time code; `confirm_action` is the only path that touches PayPal, refuses expired or reused codes,
+  and can't refund more than was paid.
+- **Cash desk dashboard** at `/dashboard` (AG Grid + AG Charts) with the same numbers the voice answers use.
+
+Run with sandbox keys in `.env` (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`), or with no keys at all:
+`PAYPAL_FIXTURES=data/paypal_fixtures .venv/bin/python -m till.server`, then open `/?paypal` and `/dashboard`.
+Tests: `tests/test_paypal.py` (fixtures) and `tests/test_paypal.py --live` (read-only against the sandbox).
+
 ## What it does
 
 | Tool | Ask it | What happens |
