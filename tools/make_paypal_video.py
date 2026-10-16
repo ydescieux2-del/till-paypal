@@ -33,18 +33,17 @@ else:
 
 # (kind, text shown or spoken, spoken version for the owner when it differs)
 BEATS = [
-    ("say", "PayPal sellers watch sales roll in, but fees, refunds, disputes and unpaid invoices live on four "
-            "different screens. This is Till for PayPal: a voice CFO, built as an MCP server."),
+    ("say", "Fees, refunds, disputes and unpaid invoices live on four different PayPal screens. "
+            "Till for PayPal answers out loud: a voice CFO, built as an MCP server."),
     ("ask", "How's PayPal looking?", None),
-    ("say", "Every number comes from PayPal's APIs and plain Python. Claude only chooses the tools."),
+    ("say", "Every number comes from PayPal and plain Python. Claude only picks the tools."),
     ("ask", "Any refund or dispute problems?", None),
     ("ask", "Who owes me money?", None),
     ("ask", "Invoice orders@example.com 200 dollars for a birthday cake",
      "Invoice orders at example dot com, two hundred dollars, for a birthday cake."),
     ("say", "Nothing moves until the owner says confirm. The code works once, and expires in ten minutes."),
     ("ask", "Confirm.", None),
-    ("dashboard", "The cash desk shows the same numbers on one screen, built with AG Grid and AG Charts: "
-                  "fee rate against normal, refunds, disputes by deadline, and who still owes you."),
+    ("dashboard", "The cash desk puts it on one screen, built with AG Grid and AG Charts."),
     ("say", "Till for PayPal. Ask, preview, confirm. Open source."),
 ]
 
@@ -153,6 +152,8 @@ def main(out_mp4):
                     "-t", f"{total:.2f}", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
                     "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", out_mp4],
                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    if total > 170:
+        print(f"WARNING: {total:.0f}s is close to the 3 minute limit; re-render (answers vary run to run)")
     print(f"{out_mp4}  {total:.1f}s  agent={agent}  data={'live sandbox' if LIVE else 'fixtures'}")
 
 

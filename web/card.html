@@ -5,21 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Till card</title>
 <style>
-  :root { --navy:#0f2240; --navy2:#1e3a5f; --accent:#2563eb; --surface:#f1f5f9; --text:#0f172a; --muted:#475569;
-          --ok:#15803d; --warn:#b45309; --bad:#b91c1c; }
+  :root { --bg:#121c2f; --surface:#1a2640; --border:#1f2a40; --text:#e2e8f0; --muted:#94a3b8; --title:#94a3b8;
+          --big:#e2e8f0; --accent:#60a5fa; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; }
+  [data-theme="light"] { --bg:#ffffff; --surface:#f1f5f9; --border:#e2e8f0; --text:#0f172a; --muted:#475569;
+          --title:#1e3a5f; --big:#0f2240; --accent:#2563eb; --ok:#15803d; --warn:#b45309; --bad:#b91c1c; }
   * { box-sizing:border-box; }
-  html, body { margin:0; background:#fff; color:var(--text);
+  html, body { margin:0; background:var(--bg); color:var(--text);
                font:15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
   .card { padding:20px 22px; }
   .head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
-  .title { font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--navy2); }
+  .title { font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--title); }
   .asof { font-size:13px; color:var(--muted); }
-  .big { font-size:40px; font-weight:700; color:var(--navy); line-height:1.15; margin-top:6px; }
+  .big { font-size:40px; font-weight:700; color:var(--big); line-height:1.15; margin-top:6px; }
   .big.ok { color:var(--ok); } .big.warn { color:var(--warn); } .big.bad { color:var(--bad); }
   .biglabel { font-size:14px; color:var(--muted); }
   svg { display:block; width:100%; height:96px; margin:14px 0 4px; }
-  .rows { margin-top:12px; border-top:1px solid #e2e8f0; }
-  .row { display:flex; justify-content:space-between; gap:16px; padding:7px 0; border-bottom:1px solid #e2e8f0; font-size:14px; }
+  .rows { margin-top:12px; border-top:1px solid var(--border); }
+  .row { display:flex; justify-content:space-between; gap:16px; padding:7px 0; border-bottom:1px solid var(--border); font-size:14px; }
   .row .v { font-weight:600; font-variant-numeric:tabular-nums; text-align:right; }
   .row.bad .v { color:var(--bad); } .row.ok .v { color:var(--ok); } .row.warn .v { color:var(--warn); }
   .items { margin-top:12px; display:grid; gap:8px; }
@@ -56,11 +58,11 @@ function chart(values, floor) {
   const pts = values.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
   const minI = values.indexOf(Math.min(...values));
   const fl = floor != null
-    ? `<line x1="0" x2="${W}" y1="${y(floor)}" y2="${y(floor)}" stroke="#b91c1c" stroke-dasharray="6 5" stroke-width="1.5"/>`
+    ? `<line x1="0" x2="${W}" y1="${y(floor)}" y2="${y(floor)}" style="stroke:var(--bad)" stroke-dasharray="6 5" stroke-width="1.5"/>`
     : "";
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="cash forecast">
-    ${fl}<polyline points="${pts}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round"/>
-    <circle cx="${x(minI)}" cy="${y(values[minI])}" r="5" fill="#0f2240"/></svg>`;
+    ${fl}<polyline points="${pts}" fill="none" style="stroke:var(--accent)" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="${x(minI)}" cy="${y(values[minI])}" r="5" style="fill:var(--text)"/></svg>`;
 }
 
 function render(card) {
@@ -91,6 +93,9 @@ request("ui/initialize", {
   protocolVersion: "2026-01-26",
   appInfo: { name: "till-card", version: "0.1.0" },
   appCapabilities: {}
+}).then(r => {
+  // Follow the host's theme (MCP Apps hostContext); dark when the host doesn't say.
+  if (r?.hostContext?.theme === "light") document.documentElement.dataset.theme = "light";
 }).then(() => send({ method: "ui/notifications/initialized", params: {} }));
 </script>
 </body>
