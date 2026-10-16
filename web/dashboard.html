@@ -72,7 +72,8 @@ async function load() {
   const k = d.kpis;
   $("#asof").textContent = "as of " + d.as_of;
   $("#kpis").innerHTML =
-    kpi("PayPal balance", money(k.balance), `13-week low ${money(k.low_point)} (wk of ${k.low_week.slice(5)})`) +
+    kpi("PayPal balance", money(k.balance), k.low_point < k.balance
+        ? `13-week low ${money(k.low_point)} (wk of ${k.low_week.slice(5)})` : "no dip below today in 13 weeks") +
     kpi("Sales, 7 days", money(k.sales_7d), `fees ${money(k.fees_7d)}`) +
     kpi("Fee rate", k.fee_rate == null ? "–" : k.fee_rate.toFixed(2) + "%",
         k.fee_baseline == null ? "baseline building" : `usual ${k.fee_baseline.toFixed(2)}%`,

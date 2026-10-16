@@ -221,12 +221,18 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
         fc = engine.forecast(d["rows"], d["opening"], weeks=weeks, expected_inflows=owed, floor=1000.0)
         low = fc["low_point"]
         total_owed = sum(a for _, a in owed)
-        speech = (f"Over the next {weeks} weeks your PayPal balance bottoms out at {speak_money(low['balance'])} "
-                  f"the week ending {spoken_date(low['week_ending'])}, and ends near {speak_money(fc['ending_balance'])}.")
+        if low["balance"] >= d["balance"]:   # never dips below today: a "low" above today's balance reads as an error
+            speech = (f"Your PayPal balance doesn't dip below today's {speak_money(d['balance'])} over the next {weeks} "
+                      f"weeks, and ends near {speak_money(fc['ending_balance'])}.")
+        else:
+            speech = (f"Over the next {weeks} weeks your PayPal balance bottoms out at {speak_money(low['balance'])} "
+                      f"the week ending {spoken_date(low['week_ending'])}, and ends near {speak_money(fc['ending_balance'])}.")
         if total_owed:
             speech += f" That counts {speak_money(total_owed)} in unpaid invoices arriving when they're due."
         card = {"kind": "forecast", "title": f"PayPal balance, next {weeks} weeks", "as_of": fc["as_of"],
-                "big": money(low["balance"]), "big_label": f"lowest point, week ending {low['week_ending']}",
+                "big": money(min(low["balance"], d["balance"])),
+                "big_label": (f"lowest point, week ending {low['week_ending']}" if low["balance"] < d["balance"]
+                              else "lowest point is today; no dip ahead"),
                 "chart": [w["balance"] for w in fc["weeks"]],
                 "rows": [{"label": f"Wk {w['week']} ({w['week_ending'][5:]})",
                           "value": money(w["balance"]) + (f"  (+{money(w['owed_in'])} invoices)" if w["owed_in"] else "")}
