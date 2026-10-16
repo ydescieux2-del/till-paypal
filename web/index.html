@@ -5,46 +5,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Till: a voice CFO for small businesses</title>
 <style>
-  :root { --bg:#0b1220; --surface:#121c2f; --raised:#1a2640; --border:#1f2a40; --text:#e2e8f0; --text-2:#94a3b8;
-          --accent:#60a5fa; --accent-2:#2563eb; --navy:#0f2240; --header:#0f2240; --bad:#f87171; }
-  [data-theme="light"] { --bg:#f8fafc; --surface:#ffffff; --raised:#f1f5f9; --border:#e2e8f0; --text:#0f172a;
-          --text-2:#475569; --accent:#2563eb; --accent-2:#2563eb; --header:#0f2240; --bad:#b91c1c; }
+  :root { --navy:#0f2240; --navy2:#1e3a5f; --accent:#2563eb; --bg:#f8fafc; --surface:#f1f5f9;
+          --text:#0f172a; --muted:#475569; --line:#e2e8f0; }
   * { box-sizing:border-box; }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--text);
                font:15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
   header { display:flex; align-items:center; justify-content:space-between; padding:16px 28px;
-           background:var(--header); color:#fff; border-bottom:1px solid var(--border); }
+           background:var(--navy); color:#fff; }
   header h1 { margin:0; font-size:22px; letter-spacing:.01em; }
   header h1 small { font-weight:400; font-size:15px; color:#cbd5e1; margin-left:10px; }
   .status { font-size:13px; color:#cbd5e1; display:flex; gap:14px; }
   .status b { color:#fff; font-weight:600; }
   main { display:grid; grid-template-columns: minmax(380px, 1fr) minmax(420px, 1.15fr); gap:22px;
          padding:22px 28px; height:calc(100% - 64px); }
-  .panel { background:var(--surface); border:1px solid var(--border); border-radius:14px; display:flex; flex-direction:column;
+  .panel { background:#fff; border:1px solid var(--line); border-radius:14px; display:flex; flex-direction:column;
            min-height:0; }
   .panel h2 { margin:0; padding:14px 18px; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
-              color:var(--text-2); border-bottom:1px solid var(--border); }
+              color:var(--navy2); border-bottom:1px solid var(--line); }
   #convo { flex:1; overflow:auto; padding:16px 18px; display:flex; flex-direction:column; gap:12px; }
   .msg { max-width:88%; padding:10px 14px; border-radius:14px; font-size:15px; }
-  .you { align-self:flex-end; background:var(--accent-2); color:#fff; border-bottom-right-radius:4px; }
-  .till { align-self:flex-start; background:var(--raised); border-bottom-left-radius:4px; }
-  .trace { align-self:flex-start; font:13px/1.5 ui-monospace, "SF Mono", Menlo, monospace; color:var(--text-2);
+  .you { align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
+  .till { align-self:flex-start; background:var(--surface); border-bottom-left-radius:4px; }
+  .trace { align-self:flex-start; font:13px/1.5 ui-monospace, "SF Mono", Menlo, monospace; color:var(--muted);
            border-left:3px solid var(--accent); padding:2px 10px; }
   .chips { display:flex; flex-wrap:wrap; gap:8px; padding:12px 18px 0; }
-  .chip { border:1px solid var(--border); background:var(--raised); border-radius:999px; padding:6px 12px; font-size:13px;
-          color:var(--text); cursor:pointer; }
+  .chip { border:1px solid var(--line); background:#fff; border-radius:999px; padding:6px 12px; font-size:13px;
+          color:var(--navy2); cursor:pointer; }
   .chip:hover { border-color:var(--accent); color:var(--accent); }
   form { display:flex; gap:10px; padding:14px 18px 18px; }
-  input { flex:1; font:inherit; padding:11px 14px; border:1px solid var(--border); border-radius:10px;
-          background:var(--bg); color:var(--text); }
-  input::placeholder { color:var(--text-2); }
-  button.mic { width:48px; border:0; border-radius:10px; background:var(--accent-2); color:#fff; font-size:20px; cursor:pointer; }
-  button.mic.on { background:var(--bad); }
-  button.send { border:1px solid var(--border); border-radius:10px; background:var(--navy); color:#fff; padding:0 18px; font:inherit; cursor:pointer; }
+  input { flex:1; font:inherit; padding:11px 14px; border:1px solid var(--line); border-radius:10px; }
+  button.mic { width:48px; border:0; border-radius:10px; background:var(--accent); color:#fff; font-size:20px; cursor:pointer; }
+  button.mic.on { background:#b91c1c; }
+  button.send { border:0; border-radius:10px; background:var(--navy); color:#fff; padding:0 18px; font:inherit; cursor:pointer; }
   #cards { flex:1; overflow:auto; padding:16px 18px; display:flex; flex-direction:column; gap:14px; }
-  #cards iframe { flex-shrink:0; width:100%; border:1px solid var(--border); border-radius:12px; background:var(--surface); height:240px; }
-  .hint { color:var(--text-2); font-size:14px; }
-  .mode { font-size:13px; color:var(--text-2); padding:0 18px; }
+  #cards iframe { flex-shrink:0; width:100%; border:1px solid var(--line); border-radius:12px; background:#fff; height:240px; }
+  .hint { color:var(--muted); font-size:14px; }
+  .mode { font-size:13px; color:var(--muted); padding:0 18px; }
 </style>
 </head>
 <body>
@@ -71,7 +67,6 @@
   </section>
 </main>
 <script>
-if (new URLSearchParams(location.search).has("light")) document.documentElement.dataset.theme = "light";
 // ---------------------------------------------------------------- MCP client over Streamable HTTP
 const MCP_URL = "/mcp";
 const BUSINESS = "demo";
@@ -126,7 +121,7 @@ function showCard(result) {
     if (m.method === "ui/initialize") {
       f.contentWindow.postMessage({ jsonrpc: "2.0", id: m.id, result: {
         protocolVersion: m.params.protocolVersion, hostInfo: { name: "till-voice-demo", version: "0.1.0" },
-        hostCapabilities: {}, hostContext: { theme: document.documentElement.dataset.theme === "light" ? "light" : "dark", displayMode: "inline" } } }, "*");
+        hostCapabilities: {}, hostContext: { theme: "light", displayMode: "inline" } } }, "*");
     } else if (m.method === "ui/notifications/initialized") {
       f.contentWindow.postMessage({ jsonrpc: "2.0", method: "ui/notifications/tool-result", params: result }, "*");
     } else if (m.method === "ui/notifications/size-changed") {
@@ -219,7 +214,7 @@ Use the tools for every number; never estimate. You may call several tools in a 
 (for example check unusual_charges to get an id before review_charge, or a forecast before advising).
 Reply in at most two short spoken sentences, 45 words total, no lists, no markdown. Lead with the one thing that matters most, then offer one follow-up (for example: want me to go through the charges?).
 The first text block of each tool result is already written for the ear; reuse it when it answers the question.
-Say numbers exactly as the tools state them; never round a baseline or rate differently. Only offer a follow-up that one of your tools can do.
+Say numbers exactly as the tools state them; never round a baseline or rate differently. Only offer a follow-up that one of your tools can do: the refund radar, fee watch, the PayPal forecast, unpaid invoices, or previewing an invoice, a refund, or accepting a dispute. Never offer reminders, emails, or anything else, and never mention what you cannot do.
 You are not a licensed advisor; do not give tax or investment advice.
 For PayPal questions use the paypal_* tools. Money-moving actions (invoices, refunds, settling disputes) always go
 through a preview_* tool first; read the preview back and ask the owner to say "confirm". Only call confirm_action

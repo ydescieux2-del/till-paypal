@@ -1,8 +1,10 @@
 """Render the Till for PayPal demo video with no human recording.
 
-    source ~/.secrets && python3 tools/make_paypal_video.py OUT.mp4                # draft: macOS voices, fixture data
-    source ~/.secrets && python3 tools/make_paypal_video.py OUT.mp4 --eleven       # final: ElevenLabs voices
-    add --live to read the real PayPal sandbox (.env keys) instead of the recorded fixtures
+    source ~/.secrets && python3 tools/make_paypal_video.py OUT.mp4            # recorded fixture data
+    source ~/.secrets && python3 tools/make_paypal_video.py OUT.mp4 --live     # the real PayPal sandbox (.env keys)
+
+Same look and voices as the Oct 15 Till video: light blue theme, ElevenLabs Brian (narrator), Chris (owner),
+Eric (Till). No placeholder voices, ever (Von 2026-10-16).
 
 Drives the real voice page (Claude agent mode) against a throwaway Till server, records the screen with
 Playwright, then shows the cash desk dashboard, and lays the audio on the timeline: a narrator, the bakery
@@ -24,12 +26,8 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
 PORT = 8799
-ELEVEN = "--eleven" in sys.argv
 LIVE = "--live" in sys.argv
-if ELEVEN:
-    NARRATOR, OWNER, TILL = "nPczCjzI2devNBz1zQrb", "iP95p4xoKVk53GoZ742B", "cjVigY5qzO86Huf0OWal"  # Brian, Chris, Eric
-else:
-    NARRATOR, OWNER, TILL = "Daniel", "Samantha", "Reed (English (US))"  # placeholder voices, free
+NARRATOR, OWNER, TILL = "nPczCjzI2devNBz1zQrb", "iP95p4xoKVk53GoZ742B", "cjVigY5qzO86Huf0OWal"  # Brian, Chris, Eric
 
 # (kind, text shown or spoken, spoken version for the owner when it differs)
 BEATS = [
@@ -50,23 +48,17 @@ BEATS = [
 CACHE = ROOT / "tools" / ".tts_cache"
 
 
-def tts(text, voice, out):
+def tts(text, voice, out, model="eleven_multilingual_v2"):
     CACHE.mkdir(exist_ok=True)
-    hit = CACHE / (hashlib.sha1(f"{voice}|{text}".encode()).hexdigest() + ".mp3")
+    hit = CACHE / (hashlib.sha1(f"{voice}|{model}|{text}".encode()).hexdigest() + ".mp3")
     if hit.exists():
         shutil.copy(hit, out)
         return _dur(out)
-    if ELEVEN:
-        req = urllib.request.Request(
-            f"https://api.elevenlabs.io/v1/text-to-speech/{voice}?output_format=mp3_44100_128",
-            data=json.dumps({"text": text, "model_id": "eleven_multilingual_v2"}).encode(),
-            headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"], "content-type": "application/json"})
-        out.write_bytes(urllib.request.urlopen(req, timeout=60).read())
-    else:
-        aiff = out.with_suffix(".aiff")
-        subprocess.run(["say", "-v", voice, "-r", "185", "-o", str(aiff), text], check=True)
-        subprocess.run(["ffmpeg", "-y", "-i", str(aiff), "-ar", "44100", "-b:a", "128k", str(out)],
-                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    req = urllib.request.Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{voice}?output_format=mp3_44100_128",
+        data=json.dumps({"text": text, "model_id": model}).encode(),
+        headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"], "content-type": "application/json"})
+    out.write_bytes(urllib.request.urlopen(req, timeout=60).read())
     shutil.copy(out, hit)
     return _dur(out)
 
@@ -128,7 +120,7 @@ def main(out_mp4):
                 appeared = now()
                 reply = page.locator(".msg.till").nth(answers - 1).inner_text()
                 f = tmp / f"a{i}.mp3"
-                d = tts(reply, TILL, f)
+                d = tts(reply, TILL, f, model="eleven_flash_v2_5")
                 clips.append((appeared + 0.3, f))
                 d -= now() - appeared - 0.3
                 print(f"[{now():6.1f}s] {shown}\n          -> {reply}")
