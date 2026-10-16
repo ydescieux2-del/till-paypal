@@ -8,3 +8,4 @@ data/*.db
 data/sandbox_captures.json
 logs/
 notes/
+tools/.tts_cache/

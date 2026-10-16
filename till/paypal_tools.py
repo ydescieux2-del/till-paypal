@@ -22,6 +22,11 @@ _pp = PayPal()
 _cache: dict = {}
 
 
+
+def _pct_words(rate: float) -> str:
+    """A small baseline read aloud without rounding it up into a different number."""
+    return "under 1 percent" if rate < 1 else f"about {round(rate)} percent"
+
 def _err(msg: str) -> CallToolResult:
     return CallToolResult(content=[TextContent(type="text", text=msg)], is_error=True)
 
@@ -127,7 +132,7 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
         if inv:
             parts.append(f"{len(inv)} invoice{'s are' if len(inv) != 1 else ' is'} overdue, {speak_money(sum(i['amount'] for i in inv))}.")
         if rr["spike"]:
-            parts.append(f"Refunds are running at {rr['latest_rate']:.0f} percent of sales, up from about {max(1, round(rr['baseline_rate']))} percent.")
+            parts.append(f"Refunds are running at {rr['latest_rate']:.0f} percent of sales, up from {_pct_words(rr['baseline_rate'])} normally.")
         card = {"kind": "paypal_brief", "title": "PayPal cash brief", "as_of": today.isoformat(),
                 "big": money(d["balance"]), "big_label": "PayPal balance",
                 "rows": [{"label": "Sales, last 7 days", "value": money(sales)},
@@ -173,7 +178,7 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
     def paypal_refund_radar() -> CallToolResult:
         d = _data()
         rr = refund_radar(d["rows"], d["disputes"], _today(d))
-        speech = (f"Refunds are {rr['latest_rate']:.0f} percent of sales this week, against about {max(1, round(rr['baseline_rate']))} percent normally."
+        speech = (f"Refunds are {rr['latest_rate']:.0f} percent of sales this week, against {_pct_words(rr['baseline_rate'])} normally."
                   + (" That's a spike." if rr["spike"] else ""))
         if rr["repeat_refunders"]:
             speech += f" {len(rr['repeat_refunders'])} customers have asked for more than one refund."
