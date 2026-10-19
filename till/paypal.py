@@ -188,19 +188,25 @@ def to_rows(details: list[dict]) -> list[dict]:
 
 # ---------------------------------------------------------------------- PayPal-specific checks (deterministic)
 
-def _week(d: str) -> str:
-    dt = date.fromisoformat(d)
-    return (dt - timedelta(days=dt.weekday())).isoformat()
+def _week(d: str, end: date) -> str:
+    """Label of the 7-day window ending on `end` (or 7, 14... days before) that holds d.
+    Rolling windows, so "this week" is always 7 full days, never a half-started calendar week."""
+    return (end - timedelta(days=(end - date.fromisoformat(d)).days // 7 * 7)).isoformat()
+
+
+def _as_of(rows: list[dict]) -> date:
+    return max(date.fromisoformat(r["date"]) for r in rows) if rows else date.today()
 
 
 def fee_watch(rows: list[dict], baseline_weeks: int = 8) -> dict:
     """Effective fee rate per week on sales; flags the latest full week if it drifts above baseline."""
     sales, fees = defaultdict(float), defaultdict(float)
+    end = _as_of(rows)
     for r in rows:
         if r["category"] == "Sales" and r["amount"] > 0:
-            sales[_week(r["date"])] += r["amount"]
+            sales[_week(r["date"], end)] += r["amount"]
         if r["category"] == "Fees" and r.get("fee_of", 0) > 0:
-            fees[_week(r["date"])] += -r["amount"]
+            fees[_week(r["date"], end)] += -r["amount"]
     weeks = sorted(w for w in sales if sales[w] > 0)
     rates = [{"week": w, "sales": round(sales[w], 2), "fees": round(fees[w], 2),
               "rate": round(fees[w] / sales[w] * 100, 2)} for w in weeks]
@@ -217,8 +223,9 @@ def fee_watch(rows: list[dict], baseline_weeks: int = 8) -> dict:
 def refund_radar(rows: list[dict], disputes: list[dict], today: date | None = None) -> dict:
     """Refund rate this week vs the prior 8, repeat refunders (hashed), and dispute money at risk with deadlines."""
     sales, refunds, refunders = defaultdict(float), defaultdict(float), defaultdict(int)
+    end = _as_of(rows)
     for r in rows:
-        w = _week(r["date"])
+        w = _week(r["date"], end)
         if r["category"] == "Sales" and r["amount"] > 0:
             sales[w] += r["amount"]
         elif r["category"] == "Refunds":
@@ -228,8 +235,9 @@ def refund_radar(rows: list[dict], disputes: list[dict], today: date | None = No
     rate = lambda w: refunds[w] / sales[w] * 100 if sales[w] else 0.0
     latest = weeks[-1] if weeks else None
     prior = weeks[-9:-1]
-    base = (sum(refunds[w] for w in prior) / max(1, sum(sales[w] for w in prior)) * 100) if prior else 0.0
-    spike = bool(latest) and rate(latest) >= max(2 * base, base + 3) and refunds[latest] >= 50
+    # Like fee_watch: no "normal" until there are at least 2 earlier weeks to compare against.
+    base = (sum(refunds[w] for w in prior) / max(1, sum(sales[w] for w in prior)) * 100) if len(prior) >= 2 else None
+    spike = base is not None and rate(latest) >= max(2 * base, base + 3) and refunds[latest] >= 50
     today = today or date.today()
     open_d = []
     for d in disputes:
@@ -241,7 +249,7 @@ def refund_radar(rows: list[dict], disputes: list[dict], today: date | None = No
                        "due": due, "days_left": (date.fromisoformat(due) - today).days if due else None})
     open_d.sort(key=lambda x: (x["days_left"] is None, x["days_left"] if x["days_left"] is not None else 0))
     return {"weekly": [{"week": w, "refund_rate": round(rate(w), 2), "refunds": round(refunds[w], 2)} for w in weeks],
-            "latest_rate": round(rate(latest), 2) if latest else 0.0, "baseline_rate": round(base, 2), "spike": spike,
+            "latest_rate": round(rate(latest), 2) if latest else 0.0, "baseline_rate": None if base is None else round(base, 2), "spike": spike,
             "repeat_refunders": sorted(([c, n] for c, n in refunders.items() if n >= 2), key=lambda x: -x[1]),
             "disputes": open_d, "at_risk": round(sum(d["amount"] for d in open_d), 2)}
 

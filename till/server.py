@@ -12,6 +12,7 @@ from __future__ import annotations
 import csv
 import io
 import os
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 import httpx
@@ -34,14 +35,19 @@ apps.add_html_resource(CARD_URI, (WEB / "card.html").read_text(), name="Till car
                        prefers_border=True)
 
 
+def _whole(a: float) -> int:
+    """Round half up like the dashboard does: $228.50 -> 229 (Python's format would give 228)."""
+    return int(Decimal(str(a)).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
 def _money(x: float) -> str:
-    return f"-${-x:,.0f}" if x < 0 else f"${x:,.0f}"
+    return f"-${_whole(-x):,}" if x < 0 else f"${_whole(x):,}"
 
 
 def _speak_money(x: float) -> str:
     """Round for the ear: $16,717 -> 'about 16.7 thousand dollars'."""
     a = abs(x)
-    s = f"{a / 1000:.1f}".removesuffix(".0") + " thousand dollars" if a >= 1000 else f"{a:,.0f} dollars"
+    s = f"{a / 1000:.1f}".removesuffix(".0") + " thousand dollars" if a >= 1000 else f"{_whole(a):,} dollars"
     return ("minus " if x < 0 else "") + s
 
 

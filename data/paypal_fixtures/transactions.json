@@ -13535,7 +13535,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.38"
+     "value": "-2.92"
     }
    },
    "payer_info": {
@@ -13554,7 +13554,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.80"
+     "value": "-2.17"
     }
    },
    "payer_info": {
@@ -13573,7 +13573,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-3.01"
+     "value": "-3.73"
     }
    },
    "payer_info": {
@@ -13592,7 +13592,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.16"
+     "value": "-2.64"
     }
    },
    "payer_info": {
@@ -13611,7 +13611,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-3.69"
+     "value": "-4.61"
     }
    },
    "payer_info": {
@@ -13621,20 +13621,16 @@
   {
    "transaction_info": {
     "transaction_id": "9PX0000723",
-    "transaction_event_code": "T0006",
-    "transaction_initiation_date": "2026-10-08T10:23:00Z",
+    "transaction_event_code": "T1107",
+    "transaction_initiation_date": "2026-10-07T12:08:00Z",
     "transaction_amount": {
      "currency_code": "USD",
-     "value": "86.77"
+     "value": "-66.46"
     },
-    "transaction_status": "S",
-    "fee_amount": {
-     "currency_code": "USD",
-     "value": "-3.52"
-    }
+    "transaction_status": "S"
    },
    "payer_info": {
-    "email_address": "buyer20@example.com"
+    "email_address": "buyer07@example.com"
    }
   },
   {
@@ -13649,7 +13645,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.68"
+     "value": "-3.31"
     }
    },
    "payer_info": {
@@ -13668,7 +13664,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.83"
+     "value": "-2.21"
     }
    },
    "payer_info": {
@@ -13687,7 +13683,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.29"
+     "value": "-1.52"
     }
    },
    "payer_info": {
@@ -13698,57 +13694,53 @@
    "transaction_info": {
     "transaction_id": "9PX0000727",
     "transaction_event_code": "T0006",
-    "transaction_initiation_date": "2026-10-09T18:22:00Z",
+    "transaction_initiation_date": "2026-10-08T15:35:00Z",
     "transaction_amount": {
      "currency_code": "USD",
-     "value": "51.74"
+     "value": "65.95"
     },
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.30"
+     "value": "-3.45"
     }
    },
    "payer_info": {
-    "email_address": "buyer27@example.com"
+    "email_address": "buyer30@example.com"
    }
   },
   {
    "transaction_info": {
     "transaction_id": "9PX0000728",
     "transaction_event_code": "T0006",
-    "transaction_initiation_date": "2026-10-09T20:18:00Z",
+    "transaction_initiation_date": "2026-10-08T15:56:00Z",
     "transaction_amount": {
      "currency_code": "USD",
-     "value": "53.10"
+     "value": "50.22"
     },
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.34"
+     "value": "-2.74"
     }
    },
    "payer_info": {
-    "email_address": "buyer21@example.com"
+    "email_address": "buyer23@example.com"
    }
   },
   {
    "transaction_info": {
     "transaction_id": "9PX0000729",
-    "transaction_event_code": "T0006",
-    "transaction_initiation_date": "2026-10-09T11:00:00Z",
+    "transaction_event_code": "T1107",
+    "transaction_initiation_date": "2026-10-08T12:15:00Z",
     "transaction_amount": {
      "currency_code": "USD",
-     "value": "58.48"
+     "value": "-40.88"
     },
-    "transaction_status": "S",
-    "fee_amount": {
-     "currency_code": "USD",
-     "value": "-2.53"
-    }
+    "transaction_status": "S"
    },
    "payer_info": {
-    "email_address": "buyer20@example.com"
+    "email_address": "buyer07@example.com"
    }
   },
   {
@@ -13763,7 +13755,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.50"
+     "value": "-1.79"
     }
    },
    "payer_info": {
@@ -13782,7 +13774,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.92"
+     "value": "-3.61"
     }
    },
    "payer_info": {
@@ -13801,7 +13793,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.73"
+     "value": "-3.37"
     }
    },
    "payer_info": {
@@ -13820,7 +13812,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.93"
+     "value": "-3.63"
     }
    },
    "payer_info": {
@@ -13839,7 +13831,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-3.24"
+     "value": "-4.02"
     }
    },
    "payer_info": {
@@ -13858,7 +13850,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-3.43"
+     "value": "-4.27"
     }
    },
    "payer_info": {
@@ -13877,7 +13869,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.93"
+     "value": "-2.35"
     }
    },
    "payer_info": {
@@ -13896,7 +13888,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.65"
+     "value": "-1.99"
     }
    },
    "payer_info": {
@@ -13915,7 +13907,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.65"
+     "value": "-1.98"
     }
    },
    "payer_info": {
@@ -13934,7 +13926,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-3.66"
+     "value": "-4.56"
     }
    },
    "payer_info": {
@@ -13953,7 +13945,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.68"
+     "value": "-3.31"
     }
    },
    "payer_info": {
@@ -13972,7 +13964,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-3.16"
+     "value": "-3.93"
     }
    },
    "payer_info": {
@@ -13991,7 +13983,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.60"
+     "value": "-1.92"
     }
    },
    "payer_info": {
@@ -14010,7 +14002,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-3.15"
+     "value": "-3.91"
     }
    },
    "payer_info": {
@@ -14029,7 +14021,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.38"
+     "value": "-1.63"
     }
    },
    "payer_info": {
@@ -14048,7 +14040,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-3.55"
+     "value": "-4.43"
     }
    },
    "payer_info": {
@@ -14067,7 +14059,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.70"
+     "value": "-2.05"
     }
    },
    "payer_info": {
@@ -14086,7 +14078,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.28"
+     "value": "-2.79"
     }
    },
    "payer_info": {
@@ -14105,7 +14097,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-2.32"
+     "value": "-2.85"
     }
    },
    "payer_info": {
@@ -14124,7 +14116,7 @@
     "transaction_status": "S",
     "fee_amount": {
      "currency_code": "USD",
-     "value": "-1.51"
+     "value": "-1.81"
     }
    },
    "payer_info": {

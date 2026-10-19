@@ -33,7 +33,7 @@ def generate():
     rng = random.Random(1015)
     details, n = [], 0
     d = TODAY - timedelta(days=119)
-    last_week = TODAY - timedelta(days=TODAY.weekday())
+    last_week = TODAY - timedelta(days=6)                      # the rolling 7-day window ending TODAY
     while d <= TODAY:
         orders = rng.randint(3, 7) + (3 if d.weekday() in (4, 5) else 0)
         for _ in range(orders):
@@ -46,7 +46,7 @@ def generate():
             n += 1
             amt = round(rng.uniform(380, 720), 2)
             details.append(_txn(f"9PX{n:07d}", d, "T0007", amt, -round(amt * 0.0349 + 0.49, 2), rng.choice(CUSTOMERS), rng))
-        refund_odds = 0.35 if d >= last_week else 0.06            # planted: refund spike this week
+        refund_odds = 0.6 if d >= last_week else 0.06             # planted: refund spike this week
         if rng.random() < refund_odds:
             n += 1
             who = "buyer07@example.com" if d >= last_week else rng.choice(CUSTOMERS)

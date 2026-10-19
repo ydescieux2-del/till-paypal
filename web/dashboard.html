@@ -78,7 +78,9 @@ async function load() {
     kpi("Fee rate", k.fee_rate == null ? "–" : k.fee_rate.toFixed(2) + "%",
         k.fee_baseline == null ? "baseline building" : `usual ${k.fee_baseline.toFixed(2)}%`,
         k.fee_baseline != null && k.fee_rate - k.fee_baseline >= 0.4 ? "bad" : "good") +
-    kpi("Refund rate", k.refund_rate.toFixed(1) + "%", `usual ${k.refund_baseline.toFixed(1)}%`, k.refund_spike ? "bad" : "good") +
+    kpi("Refund rate", k.refund_rate.toFixed(1) + "%",
+        k.refund_baseline == null ? "baseline building" : `usual ${k.refund_baseline.toFixed(1)}%`,
+        k.refund_spike ? "bad" : k.refund_baseline == null ? "" : "good") +
     kpi("Disputes at risk", money(k.at_risk), `${d.disputes.length} open`, k.at_risk ? "warn" : "good") +
     kpi("Owed to you", money(k.owed), `${money(k.overdue)} overdue`, k.overdue ? "warn" : "good");
 

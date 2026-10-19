@@ -158,7 +158,7 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
             speech = (f"This week PayPal kept {lt['rate']:.1f} percent of your sales. I need about three weeks of sales "
                       "to know your normal rate, so I'll flag drift after that.")
             card = {"kind": "fees", "title": "PayPal fee rate", "big": f"{lt['rate']:.2f}%", "big_label": "this week (baseline building)",
-                    "rows": [{"label": f"Week of {w['week']}", "value": f"{w['rate']:.2f}%  ({money(w['fees'])} on {money(w['sales'])})"}
+                    "rows": [{"label": f"Week ending {w['week']}", "value": f"{w['rate']:.2f}%  ({money(w['fees'])} on {money(w['sales'])})"}
                              for w in fw["weeks"]]}
             return result(speech, str(fw), card, {"fee_watch": fw})
         speech = (f"This week PayPal kept {lt['rate']:.1f} percent of your sales, against your usual {fw['baseline']:.1f}. "
@@ -167,7 +167,7 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
         card = {"kind": "fees", "title": "PayPal fee rate by week", "big": f"{lt['rate']:.2f}%",
                 "big_tone": "bad" if fw["drift"] else "ok", "big_label": f"this week vs {fw['baseline']:.2f}% baseline",
                 "chart": [w["rate"] for w in fw["weeks"][-12:]], "chart_floor": fw["baseline"],
-                "rows": [{"label": f"Week of {w['week']}", "value": f"{w['rate']:.2f}%  ({money(w['fees'])} on {money(w['sales'])})"}
+                "rows": [{"label": f"Week ending {w['week']}", "value": f"{w['rate']:.2f}%  ({money(w['fees'])} on {money(w['sales'])})"}
                          for w in fw["weeks"][-6:]]}
         return result(speech, str(fw), card, {"fee_watch": fw})
 
@@ -178,14 +178,17 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
     def paypal_refund_radar() -> CallToolResult:
         d = _data()
         rr = refund_radar(d["rows"], d["disputes"], _today(d))
-        speech = (f"Refunds are {rr['latest_rate']:.0f} percent of sales this week, against {_pct_words(rr['baseline_rate'])} normally."
+        speech = (f"Refunds are {rr['latest_rate']:.0f} percent of sales this week. I need a few more weeks of sales "
+                  "before I can say what's normal for you." if rr["baseline_rate"] is None else
+                  f"Refunds are {rr['latest_rate']:.0f} percent of sales this week, against {_pct_words(rr['baseline_rate'])} normally."
                   + (" That's a spike." if rr["spike"] else ""))
         if rr["repeat_refunders"]:
             speech += f" {len(rr['repeat_refunders'])} customers have asked for more than one refund."
         if rr["disputes"]:
             speech += f" {len(rr['disputes'])} disputes are open, {speak_money(rr['at_risk'])} at risk."
         card = {"kind": "refunds", "title": "Refund and dispute radar", "big": f"{rr['latest_rate']:.1f}%",
-                "big_tone": "bad" if rr["spike"] else "ok", "big_label": f"refund rate this week (normal {rr['baseline_rate']:.1f}%)",
+                "big_tone": "bad" if rr["spike"] else "ok", "big_label": "refund rate this week (baseline building)" if rr["baseline_rate"] is None
+                else f"refund rate this week (normal {rr['baseline_rate']:.1f}%)",
                 "chart": [w["refund_rate"] for w in rr["weekly"][-12:]],
                 "items": [{"id": x["id"], "title": f"Dispute {money(x['amount'])}, respond in {x['days_left']} days",
                            "detail": x["reason"], "tone": "warn"} for x in rr["disputes"]]
