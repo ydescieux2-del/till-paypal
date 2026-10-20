@@ -60,6 +60,9 @@ def test_read_tools_speak():
         r = call(name)
         assert not getattr(r, "is_error", False), (name, text(r))
         assert "$" not in text(r).split(".")[0] or name == "paypal_refund_radar", (name, text(r))   # first sentence is for the ear
+    if not LIVE:   # the model reads the detail too: money there is whole dollars, like the speech
+        for name in ("paypal_cash_brief", "paypal_refund_radar"):
+            assert "228.5" not in call(name).content[1].text, name
 
 
 def test_confirm_gate():

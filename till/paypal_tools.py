@@ -143,7 +143,8 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
                 "items": [{"id": x["id"], "title": f"Dispute {money(x['amount'])}: {x['reason']}",
                            "detail": f"Respond by {x['due']} ({x['days_left']} days).", "tone": "warn"} for x in rr["disputes"]]}
         return result(" ".join(parts), f"balance {d['balance']}; sales7 {sales:.2f}; fees7 {fees:.2f}; refunds7 {refunds:.2f}; "
-                                       f"disputes {rr['disputes']}; overdue {inv}", card)
+                                       f"disputes {[{**x, 'amount': money(x['amount'])} for x in rr['disputes']]}; "
+                                       f"at_risk {money(rr['at_risk'])}; overdue {inv}", card)
 
     @apps.tool(resource_uri=card_uri, title="PayPal fee watch",
                description="Effective PayPal fee rate by week against the merchant's own baseline; flags drift and "
@@ -193,7 +194,11 @@ def register(apps, card_uri: str, result, money, speak_money, spoken_date):
                 "items": [{"id": x["id"], "title": f"Dispute {money(x['amount'])}, respond in {x['days_left']} days",
                            "detail": x["reason"], "tone": "warn"} for x in rr["disputes"]]
                          + [{"title": f"Repeat refunds: {c}", "detail": f"{n} refunds", "tone": "warn"} for c, n in rr["repeat_refunders"][:3]]}
-        return result(speech, str(rr), card, {"radar": rr})
+        # Money in the detail is in whole dollars, same as the speech, so the model can't quote $228.5 next to $229.
+        detail = (f"latest_rate {rr['latest_rate']:.1f}; baseline_rate {rr['baseline_rate']}; spike {rr['spike']}; "
+                  f"repeat_refunders {rr['repeat_refunders']}; at_risk {money(rr['at_risk'])}; disputes "
+                  + str([{**x, "amount": money(x["amount"])} for x in rr["disputes"]]))
+        return result(speech, detail, card, {"radar": rr})
 
     @apps.tool(resource_uri=card_uri, title="Unpaid invoices",
                description="PayPal invoices that are sent but unpaid, most overdue first.")

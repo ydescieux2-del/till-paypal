@@ -47,7 +47,7 @@ function request(method, params) {
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 function chart(values, floor) {
-  if (!values || !values.length) return "";
+  if (!values || values.length < 2) return "";  // one point draws a lone dot, not a line
   const W = 600, H = 96, pad = 6;
   const all = floor != null ? values.concat([floor]) : values;
   const lo = Math.min(...all) * 0.95, hi = Math.max(...all) * 1.02;
