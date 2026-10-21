@@ -388,7 +388,12 @@ async def agent_llm(request: Request) -> Response:
         return JSONResponse({"error": "ANTHROPIC_API_KEY not set; the page falls back to its offline router"}, 503)
     body = await request.json()
     payload = {"model": _agent_model(), "max_tokens": 1024, "system": str(body.get("system", ""))[:8000],
-               "messages": body.get("messages", [])[-24:], "tools": body.get("tools", [])}
+               "messages": body.get("messages", [])[-24:], "tools": body.get("tools", []),
+               "cache_control": {"type": "ephemeral"}}   # the system prompt and tools repeat on every hop
+    last = payload["messages"][-1:] or [{}]
+    if isinstance(last[0].get("content"), list) and any(b.get("type") == "tool_result" for b in last[0]["content"]):
+        # After a tool result the model mostly phrases the answer; thinking there added seconds to every answer.
+        payload["thinking"] = {"type": "disabled"}
     async with httpx.AsyncClient(timeout=60) as client:
         r = await client.post("https://api.anthropic.com/v1/messages", json=payload,
                               headers={"x-api-key": key, "anthropic-version": "2023-06-01"})
