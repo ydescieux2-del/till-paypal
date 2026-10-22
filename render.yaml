@@ -1,0 +1,25 @@
+# Render free web service (Blueprint). The free tier spins down after 15 minutes idle and takes about a minute
+# to wake, so .github/workflows/keepwarm.yml pings it every 10 minutes once the repo variable DEMO_URL is set.
+# Secrets are never in this file: the keys are sync:false, so Render asks for them in the dashboard.
+# No ElevenLabs key on the public demo: the page falls back to the browser voice.
+services:
+  - type: web
+    name: till-paypal
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /agent/status
+    autoDeploy: true
+    envVars:
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: TILL_AGENT_MODEL
+        value: claude-haiku-5-5
+      - key: TILL_LLM_DAILY_CAP
+        value: "300"

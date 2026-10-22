@@ -12,6 +12,8 @@ from __future__ import annotations
 import csv
 import io
 import os
+import re
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
@@ -379,6 +381,10 @@ def _agent_model() -> str:
     return os.environ.get("TILL_AGENT_MODEL", "claude-haiku-5-5")
 
 
+_SYSTEM = re.search(r"const SYSTEM = `(.*?)`;", (WEB / "index.html").read_text(), re.S).group(1)
+_llm_calls: dict[str, int] = {}
+
+
 @mcp.custom_route("/agent/llm", methods=["POST"])
 async def agent_llm(request: Request) -> Response:
     """Thin pass-through so the browser's agent loop can reach Claude without holding the key.
@@ -386,9 +392,17 @@ async def agent_llm(request: Request) -> Response:
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         return JSONResponse({"error": "ANTHROPIC_API_KEY not set; the page falls back to its offline router"}, 503)
+    today = date.today().isoformat()
+    if _llm_calls.get(today, 0) >= int(os.environ.get("TILL_LLM_DAILY_CAP", "300")):
+        return JSONResponse({"error": "daily Claude limit reached; the page falls back to its offline router"}, 429)
+    _llm_calls[today] = _llm_calls.get(today, 0) + 1
     body = await request.json()
-    payload = {"model": _agent_model(), "max_tokens": 1024, "system": str(body.get("system", ""))[:8000],
-               "messages": body.get("messages", [])[-24:], "tools": body.get("tools", []),
+    # The public demo must not be a free Claude proxy: the instructions are the page's own (read from
+    # web/index.html, never from the request) and only this server's tools are passed through.
+    names = {t.name for t in await mcp.list_tools()}
+    payload = {"model": _agent_model(), "max_tokens": 1024, "system": _SYSTEM,
+               "messages": body.get("messages", [])[-24:],
+               "tools": [t for t in body.get("tools", []) if isinstance(t, dict) and t.get("name") in names],
                "cache_control": {"type": "ephemeral"}}   # the system prompt and tools repeat on every hop
     last = payload["messages"][-1:] or [{}]
     if isinstance(last[0].get("content"), list) and any(b.get("type") == "tool_result" for b in last[0]["content"]):
@@ -412,8 +426,10 @@ def _load_dotenv() -> None:
 def main() -> None:
     _load_dotenv()
     port = int(os.environ.get("PORT", "8765"))
-    print(f"Till MCP server  http://127.0.0.1:{port}/mcp   demo page  http://127.0.0.1:{port}/")
-    mcp.run("streamable-http", host="127.0.0.1", port=port, json_response=True)
+    # HOST defaults to loopback (keeps the SDK's DNS-rebinding guard on). Containers set HOST=0.0.0.0.
+    host = os.environ.get("HOST", "127.0.0.1")
+    print(f"Till MCP server  http://{host}:{port}/mcp   demo page  http://{host}:{port}/")
+    mcp.run("streamable-http", host=host, port=port, json_response=True)
 
 
 if __name__ == "__main__":
