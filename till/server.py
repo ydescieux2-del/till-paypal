@@ -425,6 +425,10 @@ def _load_dotenv() -> None:
 
 def main() -> None:
     _load_dotenv()
+    # A pasted key with a trailing newline breaks PayPal sign-in and makes httpx log the whole key.
+    for k in ("ANTHROPIC_API_KEY", "ELEVENLABS_API_KEY", "PAYPAL_CLIENT_ID", "PAYPAL_CLIENT_SECRET"):
+        if k in os.environ:
+            os.environ[k] = os.environ[k].strip()
     port = int(os.environ.get("PORT", "8765"))
     # HOST defaults to loopback (keeps the SDK's DNS-rebinding guard on). Containers set HOST=0.0.0.0.
     host = os.environ.get("HOST", "127.0.0.1")
